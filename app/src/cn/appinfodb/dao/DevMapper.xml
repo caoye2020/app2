@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//UNKNOWN/" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.appinfodb.dao.DevMapper">
+ <select id="devLogin" resultType="int">
+    select count(1) from dev_user where devName=#{devName} and devPassword=#{devPassword} 
+ </select>
+  <!--查询数量-->
+ <select id="pageCount" resultType="int">
+	SELECT count(1)
+	 FROM app_info a where 1=1
+	<if test="appName!=null">
+	   AND a.`softwareName` LIKE CONCAT('%',#{appName},'%')
+	</if>
+	<if test="status!=null and status!=-1  ">
+	     AND a.`status`=#{status}
+	</if>
+	<if test="flatformId!=null and flatformId!=-1 ">
+	    and a.flatformId=#{flatformId}
+	</if>
+	<if test="yiji!=null and yiji!=-1">
+	    and a.categoryLevel1=#{yiji}
+	</if>
+	<if test="erji!=null and erji!=-1">
+	    and a.categoryLevel2=#{erji}
+	</if>
+	<if test="sanji!=null and sanji!=-1">
+	    and a.categoryLevel3=#{sanji}
+	</if>
+ </select>
+ <!--查询数据-->
+ <select id="listA" resultType="AppInfo">
+	SELECT a.id, a.softwareName,a.APKName,a.softwareSize,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`flatformId`=d.valueId AND d.typeCode='APP_FLATFORM') AS flatformName,
+     a.flatformId,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel1`=c.id) AS categoryLevel1Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel2`=c.id) AS categoryLevel2Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel3`=c.id) AS categoryLevel3Name,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`status`=d.valueId AND d.typeCode='APP_STATUS') AS statusName,
+	 a.`status`,
+	 a.`downloads`,(SELECT v.versionNo FROM app_version v WHERE v.id=a.`versionId` ) versionNo,
+	 a.`versionId`
+	 FROM app_info a WHERE 1=1
+	<if test="appName!=null">
+	   AND a.`softwareName` LIKE CONCAT('%',#{appName},'%')
+	</if>
+	<if test="status!=null and status!=-1  ">
+	     AND a.`status`=#{status}
+	</if>
+	<if test="flatformId!=null and flatformId!=-1 ">
+	    and a.flatformId=#{flatformId}
+	</if>
+	<if test="yiji!=null and yiji!=-1">
+	    and a.categoryLevel1=#{yiji}
+	</if>
+	<if test="erji!=null and erji!=-1">
+	    and a.categoryLevel2=#{erji}
+	</if>
+	<if test="sanji!=null and sanji!=-1">
+	    and a.categoryLevel3=#{sanji}
+	</if>
+	  limit #{currPageNo},#{pageSize}
+ </select>
+  <!--查询状态-->
+  <select id="listStatus" resultType="DataDictionary">            
+         SELECT * FROM data_dictionary
+         WHERE typeCode='APP_STATUS'
+  </select>
+    <!--所属平台-->
+  <select id="flatformList" resultType="DataDictionary">            
+             SELECT * FROM data_dictionary
+       WHERE typeCode='APP_FLATFORM'
+  </select>
+  <!--查询一级分类-->
+  <select id="listCategory" resultType="AppCategory">
+      SELECT * FROM  app_category WHERE parentId IS NULL
+  </select>
+    <!--查询二级分类-->
+  <select id="listCategory2" resultType="AppCategory">
+     SELECT * FROM  app_category WHERE 1=1
+       and parentId =#{parentId}
+  </select>
+  <!--查询版本-->
+  <select id="getVersionList" resultType="AppVersion">       
+     	 SELECT app_version.*,(SELECT app_info.softwareName FROM app_info WHERE app_info.id=app_version.appId) appName,
+	                       (SELECT d.valueName FROM data_dictionary d WHERE app_version.`publishStatus`=d.valueId AND d.typeCode='PUBLISH_STATUS') AS publishStatusName
+                               FROM app_version WHERE appId IN(#{id}) ORDER BY creationDate
+  </select>
+  <!--新增版本-->
+  <insert id="addversion" parameterType="AppVersion" useGeneratedKeys="true" keyProperty="version.id">
+   INSERT INTO app_version VALUES(NULL,#{version.appId},#{version.versionNo},#{version.versionInfo},
+       #{version.publishStatus},#{version.downloadLink},#{version.versionSize},#{version.createdBy},
+       #{version.creationDate},#{version.modifyBy},#{version.modifyDate},#{version.apkLocPath},#{version.apkFileName})
+  </insert>
+  <!--查询最近一次版本-->
+  <select id="getVersionDate" resultType="AppVersion">
+   SELECT app_version.*,(SELECT app_info.softwareName FROM app_info WHERE app_info.id=app_version.appId) 
+                             appName FROM app_version WHERE appId IN(#{id})  ORDER BY creationDate DESC LIMIT 0,1
+  </select>
+  <!--修改软件版本-->
+  <update id="updateApp">
+     update app_info set versionId=#{versionId} where id=#{id}
+  </update>
+  <!--修改版本-->
+  <update id="updateVersion">
+     update app_version set versionSize=#{version.versionSize},versionInfo=#{version.versionInfo},modifyBy=#{version.modifyBy},
+                            modifyDate=#{version.modifyDate},downloadLink=#{version.downloadLink},apkLocPath=#{version.apkLocPath},
+                            apkFileName=#{version.apkFileName}
+                             where id=#{version.id}
+  </update>
+  <!--新增app信息-->
+  <insert id="appInfoadd" parameterType="AppInfo">
+      insert into app_info values(null,#{appInfo.softwareName},
+                                  #{appInfo.APKName},
+                                  #{appInfo.supportROM},
+                                  #{appInfo.interfaceLanguage},
+                                  #{appInfo.softwareSize},
+                                  #{appInfo.updateDate},
+                                  #{appInfo.devId},
+                                  #{appInfo.appInfo},
+                                  #{appInfo.status},
+                                  #{appInfo.onSaleDate},
+                                  #{appInfo.offSaleDate},
+                                  #{appInfo.flatformId},
+                                  #{appInfo.categoryLevel3},
+                                  #{appInfo.downloads},
+                                  #{appInfo.createdBy},
+                                  #{appInfo.creationDate},
+                                  #{appInfo.modifyBy},
+                                  #{appInfo.modifyDate},
+                                  #{appInfo.categoryLevel1},
+                                  #{appInfo.categoryLevel2},
+                                  #{appInfo.logoPicPath},
+                                  #{appInfo.logoLocPath},
+                                  #{appInfo.versionId})
+  </insert>
+  <!--验证apk是否存在-->
+  <select id="existApkName" resultType="int">
+    SELECT COUNT(1) FROM app_info WHERE APKName=#{name}
+  </select>
+  <!--查询单个App-->
+  <select id="getAppInfo" resultType="AppInfo">
+   SELECT a.id, a.softwareName,a.APKName,a.softwareSize,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`flatformId`=d.valueId AND d.typeCode='APP_FLATFORM') AS flatformName,
+        a.flatformId,
+        a.`categoryLevel1`,
+        a.`categoryLevel2`,
+        a.`categoryLevel3`,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel1`=c.id) AS categoryLevel1Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel2`=c.id) AS categoryLevel2Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel3`=c.id) AS categoryLevel3Name,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`status`=d.valueId AND d.typeCode='APP_STATUS') AS statusName,
+	 a.`status`,
+	 a.`downloads`,(SELECT v.versionNo FROM app_version v WHERE v.id=a.`versionId` ) versionNo,
+	 a.`supportROM`,
+	 a.`interfaceLanguage`,
+	 a.`appInfo`,
+	 a.`versionId`,
+	 a.logoPicPath,
+	 a.logoLocPath
+	 FROM app_info a WHERE id=#{id}
+  </select>
+   <update id="modifyApp" parameterType="appInfo">
+         update app_info
+		<trim prefix="set" suffixOverrides="," suffix="where id=#{appInfo.id}">
+			<if test="appInfo.softwareName != null">softwareName=#{appInfo.softwareName},</if>
+			<!-- <if test="APKName != null">APKName=#{APKName},</if> -->
+			<if test="appInfo.supportROM != null">supportROM=#{appInfo.supportROM},</if>
+			<if test="appInfo.interfaceLanguage != null">interfaceLanguage=#{appInfo.interfaceLanguage},</if>
+			<if test="appInfo.updateDate != null">updateDate=#{appInfo.updateDate},</if>
+			<if test="appInfo.softwareSize != null">softwareSize=#{appInfo.softwareSize},</if>
+			<if test="appInfo.appInfo != null">appInfo=#{appInfo.appInfo},</if>
+			<if test="appInfo.status != null">status=#{appInfo.status},</if>
+			<if test="appInfo.onSaleDate != null">onSaleDate=#{appInfo.onSaleDate},</if>
+			<if test="appInfo.offSaleDate != null">offSaleDate=#{appInfo.offSaleDate},</if>
+			<if test="appInfo.categoryLevel1 != null">categoryLevel1=#{appInfo.categoryLevel1},</if>
+			<if test="appInfo.categoryLevel2 != null">categoryLevel2=#{appInfo.categoryLevel2},</if>
+			<if test="appInfo.categoryLevel3 != null">categoryLevel3=#{appInfo.categoryLevel3},</if>
+			<if test="appInfo.downloads != null">downloads=#{appInfo.downloads},</if>
+			<if test="appInfo.flatformId != null">flatformId=#{appInfo.flatformId},</if>
+			<if test="appInfo.logoPicPath != null">logoPicPath=#{appInfo.logoPicPath},</if>
+			<if test="appInfo.logoLocPath != null">logoLocPath=#{appInfo.logoLocPath},</if>
+			<if test="appInfo.modifyBy != null">modifyBy=#{appInfo.modifyBy},</if>
+			<if test="appInfo.modifyDate != null">modifyDate=#{appInfo.modifyDate},</if>
+		</trim>
+   </update>
+   <!--查看app-->
+   <resultMap type="AppInfo" id="listVersion">
+     <id property="id" column="id"></id>
+     <result property="softwareName" column="softwareName"></result>
+     <result property="APKName" column="APKName"></result>
+     <result property="softwareSize" column="softwareSize"></result>
+     <result property="flatformName" column="flatformName"></result>
+     <result property="supportROM" column="supportROM"></result>
+     <result property="categoryLevel1Name" column="categoryLevel1Name"></result>
+     <result property="categoryLevel2Name" column="categoryLevel2Name"></result>
+     <result property="categoryLevel3Name" column="categoryLevel3Name"></result>
+     <result property="interfaceLanguage" column="interfaceLanguage"></result>
+     <result property="downloads" column="downloads"></result>
+     <result property="statusName" column="statusName"></result>
+     <result property="appInfo" column="appInfo"></result>
+     <result property="logoPicPath" column="logoPicPath"></result>
+<!--      <result property="statusName" column="statusName"></result>
+     <result property="statusName" column="statusName"></result>
+     <result property="statusName" column="statusName"></result>
+     <result property="statusName" column="statusName"></result>
+     <result property="statusName" column="statusName"></result> -->
+     
+     <collection property="listVersion" ofType="AppVersion">
+       <result property="versionNo" column="versionNo"></result>
+       <result property="versionSize" column="versionSize"></result>
+       <result property="publishStatus" column="publishStatus"></result>
+       <result property="apkFileName" column="apkFileName"></result>
+       <result property="downloadLink" column="downloadLink"></result>
+       <result property="modifyDate" column="modifyDate"></result>
+       <result property="appName" column="softwareName"></result>
+       <result property="publishStatusName" column="statusName"></result>
+     </collection>
+   </resultMap>
+   <select id="getApp" resultType="AppInfo">
+ <!--   SELECT a.id, a.softwareName,a.APKName,a.softwareSize,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`flatformId`=d.valueId AND d.typeCode='APP_FLATFORM') AS flatformName,
+         a.`supportROM`,a.`interfaceLanguage`,a.downloads,a.`appInfo`,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel1`=c.id) AS categoryLevel1Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel2`=c.id) AS categoryLevel2Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel3`=c.id) AS categoryLevel3Name,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`status`=d.valueId AND d.typeCode='APP_STATUS') AS statusName,
+	 a.`status`,a.`logoPicPath`,
+	 a.`downloads`,(SELECT v.versionNo FROM app_version v WHERE v.id=a.`versionId` ) versionNo,
+	 a.`versionId`,v.`versionNo`,v.`versionSize`,v.`publishStatus`,v.`apkFileName`,v.`downloadLink`,v.`modifyDate`
+	 FROM app_info a,app_version v WHERE a.id=v.`appId`  AND a.`id`=#{id} -->
+	 SELECT a.id, a.softwareName,a.APKName,a.softwareSize,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`flatformId`=d.valueId AND d.typeCode='APP_FLATFORM') AS flatformName,
+         a.`supportROM`,a.`interfaceLanguage`,a.downloads,a.`appInfo`,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel1`=c.id) AS categoryLevel1Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel2`=c.id) AS categoryLevel2Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel3`=c.id) AS categoryLevel3Name,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`status`=d.valueId AND d.typeCode='APP_STATUS') AS statusName,
+	 a.`status`,a.`logoPicPath`,
+	 a.`downloads`,(SELECT v.versionNo FROM app_version v WHERE v.id=a.`versionId` ) versionNo,
+	 a.`versionId`
+	 FROM app_info a WHERE a.`id`=#{id} 
+	 
+   </select>
+   <!--删除app-->
+   <delete id="deleteApp">
+       delete from app_info where id=#{id}
+   </delete>
+   <!--删除版本-->
+   <delete id="deleteVersion">
+       delete from app_version where appId=#{appId}
+   </delete>
+   <!--getAppById-->
+   <select id="getAppById" resultType="cn.appinfodb.pojo.AppInfo" >
+      SELECT * FROM app_info WHERE id=#{id}                    
+   </select>
+   <!--修改app状态-->
+   <update id="updateAppstatus">
+     update app_info set status=#{status} where id=#{id}
+   </update>
+</mapper>

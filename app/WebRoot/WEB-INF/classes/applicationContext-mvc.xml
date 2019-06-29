@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+	http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+	http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.1.xsd">
+    <context:component-scan base-package="cn.appinfodb.controller"/>    
+     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+      <property name="prefix" value="/WEB-INF/jsp/"/>
+      <property name="suffix" value=".jsp"></property>
+     </bean>
+     
+     <!--映射动态请求-->
+     <mvc:annotation-driven>
+      <!-- <mvc:message-converters>
+        <bean class="com.alibaba.fastjson.support.spring.FastJsonHttpMessageConverter">
+         <property name="supportedMediaTypes">
+             <list>
+               <value>application/json</value>
+               <value>text/html;charset=utf-8</value>
+             </list>
+         </property>
+        </bean>
+      </mvc:message-converters> -->
+     </mvc:annotation-driven>
+     <!--注册前台-->
+     <mvc:interceptors>
+       <mvc:interceptor>
+         <mvc:mapping path="/sys/devindex/**"/>
+         <bean class="cn.appinfodb.interceptor.Sysinterceptor"/>
+       </mvc:interceptor>
+     </mvc:interceptors>
+     <!--拦截后台-->
+     <mvc:interceptors>
+       <mvc:interceptor>
+         <mvc:mapping path="/sys/backend/**"/>
+         <bean class="cn.appinfodb.interceptor.BackednInterceptors"/>
+       </mvc:interceptor>
+     </mvc:interceptors>
+     <!--引入静态资源-->
+     <mvc:default-servlet-handler/>
+     <!--配置文件上传-->
+     <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+              <property name="defaultEncoding" value="utf-8"/>
+              <property name="maxUploadSize" value="5000000" />
+     </bean>
+</beans>

@@ -1,0 +1,13 @@
+eclipse.preferences.version=1
+encoding//WebRoot/statics/localjs/appinfoadd.js=UTF-8
+encoding//WebRoot/statics/localjs/appinfolist.js=UTF-8
+encoding//WebRoot/statics/localjs/appinfomodify.js=UTF-8
+encoding//WebRoot/statics/localjs/applist.js=UTF-8
+encoding//src/cn/appinfodb/pojo/AdPromotion.java=UTF-8
+encoding//src/cn/appinfodb/pojo/AppCategory.java=UTF-8
+encoding//src/cn/appinfodb/pojo/AppInfo.java=UTF-8
+encoding//src/cn/appinfodb/pojo/AppVersion.java=UTF-8
+encoding//src/cn/appinfodb/pojo/BackendUser.java=UTF-8
+encoding//src/cn/appinfodb/pojo/DataDictionary.java=UTF-8
+encoding//src/cn/appinfodb/pojo/DevUser.java=UTF-8
+encoding//src/cn/appinfodb/service/devServiceImpl.java=UTF-8

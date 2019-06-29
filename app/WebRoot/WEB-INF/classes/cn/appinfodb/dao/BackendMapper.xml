@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper 
+PUBLIC "-//UNKNOWN/" 
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.appinfodb.dao.BackendMapper">
+     
+     <!--登录-->
+     <select id="backendLogin" resultType="BackendUser">
+        SELECT b.*,(SELECT d.valueName FROM data_dictionary d WHERE b.userType=d.valueId AND typeCode='USER_TYPE') userTypeName FROM backend_user b  WHERE userName=#{userName} 
+                 AND userPassword=#{userPassword}
+     </select>
+  <!--查询数量-->
+ <select id="pageCount" resultType="int">
+	SELECT count(1)
+	 FROM app_info a where 1=1 and status=1
+	<if test="appName!=null">
+	   AND a.`softwareName` LIKE CONCAT('%',#{appName},'%')
+	</if>
+	<if test="status!=null and status!=-1  ">
+	     AND a.`status`=#{status}
+	</if>
+	<if test="flatformId!=null and flatformId!=-1 ">
+	    and a.flatformId=#{flatformId}
+	</if>
+	<if test="yiji!=null and yiji!=-1">
+	    and a.categoryLevel1=#{yiji}
+	</if>
+	<if test="erji!=null and erji!=-1">
+	    and a.categoryLevel2=#{erji}
+	</if>
+	<if test="sanji!=null and sanji!=-1">
+	    and a.categoryLevel3=#{sanji}
+	</if>
+ </select>
+      <!--查询数据-->
+ <select id="listA" resultType="AppInfo">
+	SELECT a.id, a.softwareName,a.APKName,a.softwareSize,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`flatformId`=d.valueId AND d.typeCode='APP_FLATFORM') AS flatformName,
+     a.flatformId,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel1`=c.id) AS categoryLevel1Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel2`=c.id) AS categoryLevel2Name,
+	(SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel3`=c.id) AS categoryLevel3Name,
+	(SELECT d.valueName FROM data_dictionary d WHERE a.`status`=d.valueId AND d.typeCode='APP_STATUS') AS statusName,
+	 a.`status`,
+	 a.`downloads`,(SELECT v.versionNo FROM app_version v WHERE v.id=a.`versionId` ) versionNo,
+	 a.`versionId`
+	 FROM app_info a WHERE 1=1 and status=1
+	<if test="appName!=null">
+	   AND a.`softwareName` LIKE CONCAT('%',#{appName},'%')
+	</if>
+	<if test="status!=null and status!=-1  ">
+	     AND a.`status`=#{status}
+	</if>
+	<if test="flatformId!=null and flatformId!=-1 ">
+	    and a.flatformId=#{flatformId}
+	</if>
+	<if test="yiji!=null and yiji!=-1">
+	    and a.categoryLevel1=#{yiji}
+	</if>
+	<if test="erji!=null and erji!=-1">
+	    and a.categoryLevel2=#{erji}
+	</if>
+	<if test="sanji!=null and sanji!=-1">
+	    and a.categoryLevel3=#{sanji}
+	</if>
+	  limit #{currPageNo},#{pageSize}
+ </select>
+     <!--所属平台-->
+  <select id="flatformList" resultType="DataDictionary">            
+             SELECT * FROM data_dictionary
+       WHERE typeCode='APP_FLATFORM'
+  </select>
+  <!--查询三级分类-->
+  <select id="listD" resultType="AppCategory">
+       SELECT * FROM app_category WHERE 1=1
+       <if test="parentId==null or parentId==''">
+         and parentId IS NULL
+       </if>
+       <if test="parentId!=null and parentId!=''">
+         and parentId=#{parentId}
+       </if>
+  </select>
+  <!--getAppp-->
+  <resultMap type="AppInfo" id="geta">
+     <id property="id" column="id"/>
+     <result property="softwareName" column="softwareName"/>
+     <result property="APKName" column="APKName"/>
+     <result property="supportROM" column="supportROM"/>
+     <result property="interfaceLanguage" column="interfaceLanguage"/>
+     <result property="downloads" column="downloads"/>
+     <result property="softwareSize" column="softwareSize"/>
+     <result property="flatformName" column="flatformName"/>
+     <result property="categoryLevel1Name" column="categoryLevel1Name"/>
+     <result property="categoryLevel2Name" column="categoryLevel2Name"/>
+     <result property="categoryLevel3Name" column="categoryLevel3Name"/>
+     <result property="statusName" column="statusName"/>
+     <result property="appInfo" column="appInfo"/>
+     <result property="logoPicPath" column="logoPicPath"/>
+     <association property="appVersion" javaType="AppVersion">
+       <result property="versionNo" column="versionNo"/>
+       <result property="versionSize" column="versionSize"/>
+       <result property="publishStatusName" column="publishStatusName"/>
+       <result property="versionInfo" column="versionInfo"/>
+       <result property="apkFileName" column="apkFileName"/>
+       <result property="downloadLink" column="downloadLink"/>
+     </association>
+  </resultMap>
+  <select id="getAppp" resultMap="geta">
+     SELECT a.id, a.softwareName,a.APKName,a.`supportROM`,a.softwareSize,a.interfaceLanguage,a.downloads,
+	 (SELECT d.valueName FROM data_dictionary d WHERE a.`flatformId`=d.valueId AND d.typeCode='APP_FLATFORM') AS flatformName,
+	 (SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel1`=c.id) AS categoryLevel1Name,
+	 (SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel2`=c.id) AS categoryLevel2Name,
+	 (SELECT c.categoryName FROM app_category c WHERE a.`categoryLevel3`=c.id) AS categoryLevel3Name,
+	 (SELECT d.valueName FROM data_dictionary d WHERE a.`status`=d.valueId AND d.typeCode='APP_STATUS') AS statusName,
+	  a.`appInfo`,a.`logoPicPath`,v.`versionNo`,v.`versionSize`,(SELECT d.valueName FROM data_dictionary d WHERE v.`publishStatus`=d.valueId AND d.typeCode='PUBLISH_STATUS') publishStatusName
+	  ,v.`versionInfo`,v.`apkFileName`,v.`downloadLink`
+	 FROM app_info a,app_version v WHERE a.`id`=v.`appId` AND a.id=#{aid} ORDER BY v.`creationDate` DESC LIMIT 0,1
+  </select>
+</mapper>
